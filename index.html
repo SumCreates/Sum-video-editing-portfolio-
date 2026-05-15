@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sum Motions — Short-Form Video Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Oswald:wght@200..700&family=Recursive:wght@300..1000&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F8F6;
+    --bg2: #F0F2EE;
+    --surface: #FFFFFF;
+    --green: #00E87A;
+    --green-dim: rgba(0,232,122,0.12);
+    --green-glow: rgba(0,232,122,0.25);
+    --green-glow2: rgba(0,232,122,0.08);
+    --sage: #B8CCBA;
+    --sage-dim: rgba(184,204,186,0.3);
+    --text: #0F1410;
+    --text-mid: #4A5248;
+    --text-light: #8A9A8C;
+    --border: rgba(0,0,0,0.07);
+    --border-hover: rgba(0,232,122,0.4);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 2px 20px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+    --shadow-hover: 0 8px 40px rgba(0,232,122,0.18), 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 48px;
+    background: rgba(247,248,246,0.82);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .nav-logo span { color: var(--green); }
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+  .nav-links a {
+    font-size: 14px; font-weight: 500; color: var(--text-mid);
+    text-decoration: none; transition: color .2s;
+    letter-spacing: 0.01em;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    background: var(--green); color: var(--text);
+    padding: 9px 20px; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    text-decoration: none; letter-spacing: 0.01em;
+    transition: box-shadow .2s, transform .15s;
+  }
+  .nav-cta:hover { box-shadow: 0 0 20px var(--green-glow); transform: translateY(-1px); }
+
+  /* SECTIONS */
+  section { width: 100%; }
+  .container { max-width: 1120px; margin: 0 auto; padding: 0 32px; }
+  .section-label {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--green);
+    background: var(--green-dim); border: 1px solid rgba(0,232,122,0.2);
+    padding: 5px 12px; border-radius: 100px; margin-bottom: 20px;
+  }
+  .section-label::before {
+    content: ''; width: 5px; height: 5px;
+    background: var(--green); border-radius: 50%;
+  }
+
+  /* FADE IN UP */
+  .fade-up {
+    opacity: 0; transform: translateY(28px);
+    transition: opacity .65s cubic-bezier(.22,1,.36,1), transform .65s cubic-bezier(.22,1,.36,1);
+  }
+  .fade-up.visible { opacity: 1; transform: translateY(0); }
+  .fade-up:nth-child(2) { transition-delay: .08s; }
+  .fade-up:nth-child(3) { transition-delay: .16s; }
+  .fade-up:nth-child(4) { transition-delay: .24s; }
+
+  /* ── HERO ── */
+  #hero {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center;
+    padding: 120px 32px 80px;
+    position: relative; overflow: hidden;
+  }
+  .hero-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(ellipse at center, rgba(0,232,122,0.18) 0%, rgba(0,232,122,0.04) 50%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -60%);
+    pointer-events: none;
+    animation: pulseGlow 4s ease-in-out infinite;
+  }
+  .hero-glow2 {
+    position: absolute;
+    width: 400px; height: 200px;
+    background: radial-gradient(ellipse at center, rgba(184,204,186,0.25) 0%, transparent 70%);
+    bottom: 10%; left: 30%;
+    pointer-events: none;
+  }
+  @keyframes pulseGlow {
+    0%,100% { opacity: 1; transform: translate(-50%,-60%) scale(1); }
+    50% { opacity: .7; transform: translate(-50%,-62%) scale(1.05); }
+  }
+  .hero-inner { position: relative; z-index: 2; max-width: 780px; }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(52px, 8vw, 88px);
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -0.04em;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+  .brand-name {
+    background: linear-gradient(135deg, #00E87A 0%, #00C962 40%, #B8CCBA 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 28px rgba(0,232,122,0.4));
+  }
+  .hero-tagline {
+    font-size: clamp(17px, 2.5vw, 22px);
+    color: var(--text-mid);
+    font-weight: 300;
+    margin-bottom: 48px;
+    letter-spacing: -0.01em;
+    line-height: 1.4;
+  }
+  .hero-tagline em { font-style: normal; color: var(--text); font-weight: 500; }
+  .hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--green); color: #0A1A0C;
+    padding: 14px 32px; border-radius: 10px;
+    font-size: 15px; font-weight: 600;
+    text-decoration: none; letter-spacing: 0.01em;
+    transition: box-shadow .25s, transform .2s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-primary:hover { box-shadow: 0 0 32px rgba(0,232,122,0.5), 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-2px); }
+  .btn-ghost {
+    background: transparent; color: var(--text);
+    padding: 14px 32px; border-radius: 10px;
+    font-size: 15px; font-weight: 500;
+    text-decoration: none; letter-spacing: 0.01em;
+    border: 1.5px solid var(--border);
+    transition: border-color .2s, box-shadow .2s, transform .2s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-ghost:hover { border-color: var(--green); box-shadow: 0 0 18px rgba(0,232,122,0.15); transform: translateY(-2px); }
+
+  /* ── ABOUT ── */
+  #about {
+    padding: 100px 32px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+  }
+  #about h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 4vw, 48px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 16px;
+    line-height: 1.15;
+  }
+  .about-bio {
+    max-width: 520px; margin: 0 auto 40px;
+    color: var(--text-mid); font-size: 17px;
+    font-weight: 300; line-height: 1.7;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 56px; }
+  .chip {
+    background: var(--bg); border: 1.5px solid var(--border);
+    border-radius: 100px; padding: 7px 18px;
+    font-size: 13px; font-weight: 500; color: var(--text);
+    letter-spacing: 0.02em;
+    transition: border-color .2s, background .2s, box-shadow .2s;
+  }
+  .chip:hover { border-color: var(--green); background: var(--green-dim); box-shadow: 0 0 12px rgba(0,232,122,0.12); }
+  .stats-row {
+    display: flex; justify-content: center; gap: 0;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    max-width: 580px; margin: 0 auto;
+    box-shadow: var(--shadow);
+  }
+  .stat {
+    flex: 1; padding: 24px 20px; text-align: center;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+  .stat:last-child { border-right: none; }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px; font-weight: 800;
+    color: var(--text); letter-spacing: -0.03em;
+    display: block; line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-num .accent { color: var(--green); }
+  .stat-label { font-size: 12px; color: var(--text-light); font-weight: 500; letter-spacing: 0.03em; }
+
+  /* ── WORK ── */
+  #work { padding: 100px 32px; text-align: center; }
+  #work h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 4vw, 48px);
+    font-weight: 700; letter-spacing: -0.03em;
+    margin-bottom: 8px;
+  }
+  .section-sub { color: var(--text-mid); font-size: 16px; margin-bottom: 56px; font-weight: 300; }
+  .work-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    max-width: 960px; margin: 0 auto;
+  }
+  .work-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: box-shadow .3s, border-color .3s, transform .25s;
+    cursor: pointer;
+    text-align: left;
+    position: relative;
+  }
+  .work-card::before {
+    content: ''; position: absolute; inset: 0; opacity: 0;
+    background: linear-gradient(135deg, rgba(0,232,122,0.08) 0%, transparent 60%);
+    transition: opacity .3s; pointer-events: none; z-index: 1; border-radius: var(--radius);
+  }
+  .work-card:hover { box-shadow: var(--shadow-hover); border-color: var(--border-hover); transform: translateY(-4px); }
+  .work-card:hover::before { opacity: 1; }
+  .work-thumb {
+    width: 100%; aspect-ratio: 16/10;
+    background: linear-gradient(135deg, #E8EEE9 0%, #D4E0D6 100%);
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  
+  .work-preview{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+  .work-thumb-inner {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 8px;
+  }
+  .thumb-icon {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(0,232,122,0.15); border: 1.5px solid rgba(0,232,122,0.3);
+    display: flex; align-items: center; justify-content: center;
+    transition: background .3s, box-shadow .3s;
+  }
+  .work-card:hover .thumb-icon { background: rgba(0,232,122,0.25); box-shadow: 0 0 16px rgba(0,232,122,0.3); }
+  .thumb-icon svg { width: 18px; height: 18px; }
+  .thumb-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-light);
+  }
+  .work-thumb-grad {
+    position: absolute; inset: 0; opacity: 0;
+    background: linear-gradient(135deg, rgba(0,232,122,0.12) 0%, transparent 70%);
+    transition: opacity .3s;
+  }
+  .work-card:hover .work-thumb-grad { opacity: 1; }
+  .work-info { padding: 16px 18px 18px; position: relative; z-index: 2; }
+  .work-client { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 4px; }
+  .work-type {
+    font-size: 12px; color: var(--text-light); font-weight: 500;
+    background: var(--bg); border: 1px solid var(--border);
+    display: inline-block; padding: 3px 10px; border-radius: 6px;
+    letter-spacing: 0.03em;
+  }
+
+
+.video-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.82);
+  backdrop-filter:blur(10px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  opacity:0;
+  pointer-events:none;
+  transition:0.35s ease;
+  z-index:9999;
+  padding:20px;
+}
+
+.video-overlay.active{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.video-modal{
+  width:min(100%,900px);
+  transform:translateY(20px) scale(.96);
+  transition:0.35s ease;
+}
+
+.video-overlay.active .video-modal{
+  transform:translateY(0) scale(1);
+}
+
+.video-modal video{
+  width:100%;
+  border-radius:24px;
+  overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,0.45);
+  background:black;
+}
+
+.close-video{
+  position:absolute;
+  top:-50px;
+  right:0;
+  width:40px;
+  height:40px;
+  border:none;
+  border-radius:50%;
+  background:white;
+  color:black;
+  font-size:18px;
+  cursor:pointer;
+}
+
+  /* ── SKILLS ── */
+  #skills {
+    padding: 100px 32px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+  }
+  #skills h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(30px, 4vw, 44px);
+    font-weight: 700; letter-spacing: -0.03em;
+    margin-bottom: 8px;
+  }
+  .skills-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 20px; max-width: 860px; margin: 56px auto 0;
+  }
+  .skill-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px 28px;
+    text-align: left;
+    box-shadow: var(--shadow);
+    transition: box-shadow .3s, border-color .3s, transform .25s;
+    position: relative; overflow: hidden;
+  }
+  .skill-card::after {
+    content: '';
+    position: absolute; top: -40px; right: -40px;
+    width: 120px; height: 120px;
+    background: radial-gradient(ellipse, rgba(0,232,122,0.1) 0%, transparent 70%);
+    pointer-events: none;
+    transition: opacity .3s;
+    opacity: 0;
+  }
+  .skill-card:hover { box-shadow: var(--shadow-hover); border-color: var(--border-hover); transform: translateY(-3px); }
+  .skill-card:hover::after { opacity: 1; }
+  .skill-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: var(--green-dim); border: 1.5px solid rgba(0,232,122,0.25);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+  }
+  .skill-icon svg { width: 20px; height: 20px; }
+  .skill-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px; font-weight: 700;
+    letter-spacing: -0.02em; margin-bottom: 8px;
+  }
+  .skill-desc { font-size: 14px; color: var(--text-mid); font-weight: 300; line-height: 1.6; }
+
+  /* ── TESTIMONIALS ── */
+  #testimonials { padding: 100px 0; text-align: center; overflow: hidden; }
+  #testimonials .container { padding-bottom: 52px; }
+  #testimonials h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(30px, 4vw, 44px);
+    font-weight: 700; letter-spacing: -0.03em;
+    margin-bottom: 8px;
+  }
+  .carousel-outer {
+    overflow: hidden; position: relative; width: 100%;
+    mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+  }
+  .carousel-track {
+    display: flex; gap: 20px;
+    animation: scrollLeft 30s linear infinite;
+    width: max-content; padding: 16px 0;
+  }
+  .carousel-outer:hover .carousel-track { animation-play-state: paused; }
+  @keyframes scrollLeft {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .testi-card {
+    flex-shrink: 0; width: 320px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 26px;
+    box-shadow: var(--shadow);
+    text-align: left;
+    border-top: 2.5px solid var(--green);
+    position: relative;
+  }
+  .testi-quote {
+    font-size: 14px; color: var(--text-mid);
+    line-height: 1.7; margin-bottom: 20px;
+    font-weight: 300;
+    font-style: italic;
+  }
+  .testi-quote::before { content: '"'; color: var(--green); font-size: 28px; line-height: 0; vertical-align: -10px; margin-right: 2px; font-style: normal; }
+  .testi-footer { display: flex; align-items: center; gap: 12px; }
+  .testi-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, #C8DCCA, #A8C4AA);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: var(--text);
+    flex-shrink: 0;
+  }
+  .testi-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .testi-role { font-size: 12px; color: var(--text-light); }
+
+  /* ── CONTACT ── */
+  #contact {
+    padding: 100px 32px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+  .contact-inner { max-width: 600px; margin: 0 auto; }
+  #contact h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(36px, 5vw, 56px);
+    font-weight: 800; letter-spacing: -0.04em;
+    line-height: 1.1; margin-bottom: 16px;
+  }
+  #contact h2 span { color: var(--green); }
+  .contact-sub { color: var(--text-mid); font-size: 16px; margin-bottom: 48px; font-weight: 300; line-height: 1.6; }
+  .contact-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn-ig {
+    background: var(--text); color: var(--bg);
+    padding: 14px 28px; border-radius: 10px;
+    font-size: 15px; font-weight: 600;
+    text-decoration: none; letter-spacing: 0.01em;
+    display: inline-flex; align-items: center; gap: 10px;
+    transition: background .2s, transform .2s, box-shadow .2s;
+  }
+  .btn-ig:hover { background: #1a2e1c; transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.12); }
+  .btn-email {
+    background: transparent; color: var(--text);
+    padding: 14px 28px; border-radius: 10px;
+    font-size: 15px; font-weight: 500;
+    text-decoration: none; letter-spacing: 0.01em;
+    border: 1.5px solid var(--border);
+    display: inline-flex; align-items: center; gap: 10px;
+    transition: border-color .2s, box-shadow .2s, transform .2s;
+  }
+  .btn-email:hover { border-color: var(--green); box-shadow: 0 0 18px rgba(0,232,122,0.15); transform: translateY(-2px); }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 32px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .footer-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 16px; letter-spacing: -0.02em;
+    color: var(--text); text-decoration: none;
+  }
+  .footer-logo span { color: var(--green); }
+  .footer-right { display: flex; align-items: center; gap: 24px; }
+  .footer-ig {
+    font-size: 13px; color: var(--text-light);
+    text-decoration: none; font-weight: 500;
+    transition: color .2s;
+  }
+  .footer-ig:hover { color: var(--green); }
+  .footer-copy { font-size: 12px; color: var(--text-light); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--sage); border-radius: 3px; }
+
+  /* RESPONSIVE */
+  @media(max-width: 900px) {
+    nav { padding: 16px 24px; }
+    .nav-links { display: none; }
+    .work-grid { grid-template-columns: repeat(2, 1fr); }
+    .skills-grid { grid-template-columns: 1fr; max-width: 420px; }
+  }
+  @media(max-width: 600px) {
+    nav { padding: 14px 20px; }
+    .work-grid { grid-template-columns: 1fr; max-width: 380px; }
+    .stats-row { flex-direction: column; }
+    .stat { border-right: none; border-bottom: 1px solid var(--border); }
+    .stat:last-child { border-bottom: none; }
+    footer { flex-direction: column; text-align: center; }
+    .footer-right { flex-direction: column; gap: 10px; }
+    #hero { padding-top: 100px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#hero" class="nav-logo">Sum<span>.</span>Motions</a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#work">Work</a></li>
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="#testimonials">Clients</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Hire Me →</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-glow2"></div>
+  <div class="hero-inner">
+    <h1 class="fade-up">
+      <span class="brand-name">Sum Motions</span><br>
+      stops the scroll.
+    </h1>
+    <p class="hero-tagline fade-up">
+      Short-form. Sharp cuts. <em>Real results.</em><br>
+      Turning raw footage into content that actually converts.
+    </p>
+    <div class="hero-ctas fade-up">
+      <a href="#contact" class="btn-primary">Hire Me →</a>
+      <a href="#work" class="btn-ghost">See My Work ↓</a>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <div class="section-label fade-up">About</div>
+    <h2 class="fade-up">Built different.<br>Edited sharper.</h2>
+    <p class="about-bio fade-up">
+      2.5 years deep in short-form — crafting reels, cuts, and moments that
+      hold attention on the feeds that never sleep. No fluff, no filler.
+      Just edits that work.
+    </p>
+    <div class="chips fade-up">
+      <span class="chip">Color Grading</span>
+      <span class="chip">Motion Graphics</span>
+      <span class="chip">Reel Editing</span>
+      <span class="chip">Transitions</span>
+      <span class="chip">Sound Design</span>
+      <span class="chip">CapCut · Premiere · DaVinci</span>
+    </div>
+    <div class="stats-row fade-up">
+      <div class="stat">
+        <span class="stat-num">2.5<span class="accent">+</span></span>
+        <span class="stat-label">Years Experience</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">6<span class="accent">+</span></span>
+        <span class="stat-label">Clients Served</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num" style="font-size:20px;">Short-Form</span>
+        <span class="stat-label">Specialist</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORK -->
+<section id="work">
+  <div class="container">
+    <div class="section-label fade-up">Selected Works</div>
+    <h2 class="fade-up">Client Projects</h2>
+    <p class="section-sub fade-up">A glimpse of what we've built together. <br />
+    *Quality of previews have been decreased so site runs faster.</p>
+    
+    <div class="work-grid">
+
+<div class="work-card fade-up" data-video="videos/mahalaxmi-1.mp4">
+
+  <div class="work-thumb">
+
+    <video class="work-preview" muted playsinline preload="metadata">
+      <source src="videos/aura.mp4" type="video/mp4" preload="auto">
+    </video>
+
+    <div class="work-thumb-grad"></div>
+
+  </div>
+
+  <div class="work-info">
+
+    <div class="work-client">
+      Mahalaxmi Paithani
+    </div>
+
+    <span class="work-type">
+      Reel Edit · Captions
+    </span>
+
+  </div>
+
+</div>
+<div class="work-card fade-up" data-video="videos/mahalaxmi-2.mp4">
+  
+  <div class="work-thumb">
+    
+    <video class="work-preview" muted playsinline preload="metadata">
+      <source src="videos/aura.mp4" type="video/mp4" preload="auto">
+    </video>
+    
+    <div class="work-thumb-grad"></div>
+    
+  </div>
+  
+  <div class="work-info">
+    
+    <div class="work-client">
+      Mahalaxmi paithani #2
+    </div>
+    
+    <span class="work-type">
+      Reel Edit · captions
+    </span>
+    
+  </div>
+  
+</div><div class="work-card fade-up" data-video="videos/meetshah.mp4">
+
+  <div class="work-thumb">
+
+    <video class="work-preview" muted playsinline preload="metadata">
+      <source src="videos/aura.mp4" type="video/mp4" preload="auto">
+    </video>
+
+    <div class="work-thumb-grad"></div>
+
+  </div>
+
+  <div class="work-info">
+
+    <div class="work-client">
+      Meet shah
+    </div>
+
+    <span class="work-type">
+      Reel Edit • Motion graphics 
+    </span>
+
+  </div>
+
+</div>
+
+<div class="work-card fade-up" data-video="videos/shivalika.mp4">
+  
+  <div class="work-thumb">
+    
+    <video class="work-preview" muted playsinline preload="metadata">
+      <source src="videos/aura.mp4" type="video/mp4">
+    </video>
+    
+    <div class="work-thumb-grad"></div>
+    
+  </div>
+  
+  <div class="work-info">
+    
+    <div class="work-client">
+      Social Pro Shivalika
+    </div>
+    
+    <span class="work-type">
+      Reel Edit · Motion graphics
+    </span>
+    
+  </div>
+  
+</div>
+<div class="work-card fade-up" data-video="videos/madhurja.mp4">
+  
+  <div class="work-thumb">
+    
+    <video class="work-preview" muted playsinline preload="metadata">
+      <source src="videos/aura.mp4" type="video/mp4">
+    </video>
+    
+    <div class="work-thumb-grad"></div>
+    
+  </div>
+  
+  <div class="work-info">
+    
+    <div class="work-client">
+      Madhurja
+    </div>
+    
+    <span class="work-type">
+      Reel Edit · Motion graphics 
+    </span>
+    
+  </div>
+  
+</div>
+
+<div class="work-card fade-up" data-video="videos/aura.mp4">
+  
+  <div class="work-thumb">
+    
+    <video class="work-preview" muted playsinline preload="metadata">
+      <source src="videos/yathavan.mp4" type="video/mp4">
+    </video>
+    
+    <div class="work-thumb-grad"></div>
+    
+  </div>
+  
+  <div class="work-info">
+    
+    <div class="work-client">
+      yatavan
+    </div>
+    
+    <span class="work-type">
+      Reel Edit · Motion graphics
+    </span>
+    
+  </div>
+  
+</div>
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="container">
+    <div class="section-label fade-up">Capabilities</div>
+    <h2 class="fade-up">What I bring to the edit.</h2>
+    <p class="section-sub fade-up">Three core disciplines. One cohesive output.</p>
+    <div class="skills-grid">
+      <div class="skill-card fade-up">
+        <div class="skill-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#00E87A" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        </div>
+        <div class="skill-name">Color Grading</div>
+        <div class="skill-desc">Moody, cinematic, or clean — I build looks that match the brand and hit different on mobile screens.</div>
+      </div>
+      <div class="skill-card fade-up">
+        <div class="skill-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#00E87A" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7 8l2 2-2 2M11 10h4"/></svg>
+        </div>
+        <div class="skill-name">Motion Graphics</div>
+        <div class="skill-desc">Animated text, transitions, and kinetic elements that give short-form content its signature energy.</div>
+      </div>
+      <div class="skill-card fade-up">
+        <div class="skill-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#00E87A" stroke-width="1.8"><path d="M14.5 4h-5L7 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+        </div>
+        <div class="skill-name">Reel Editing</div>
+        <div class="skill-desc">Tight cuts, beat-sync, hooks in the first second. Every reel is engineered to stop the scroll and keep attention.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div class="container">
+    <div class="section-label fade-up">Testimonials</div>
+    <h2 class="fade-up">What Clients Say</h2>
+    <p class="section-sub fade-up">Straight from the people who've worked with Sum Motions.</p>
+  </div>
+  <div class="carousel-outer">
+    <div class="carousel-track" id="track">
+      <!-- Cards injected by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="container">
+    <div class="contact-inner">
+      <div class="section-label fade-up" style="justify-content:center;">Let's Connect</div>
+      <h2 class="fade-up">Let's work<br><span>together.</span></h2>
+      <p class="contact-sub fade-up">
+        Reach out and let's build something worth watching.<br>
+        Fast turnaround. Clean communication. Quality guaranteed.
+      </p>
+      <div class="contact-ctas fade-up">
+        <a href="https://instagram.com/un1que.sum" target="_blank" rel="noopener" class="btn-ig">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
+          DM on Instagram
+        </a>
+        <a href="mailto:sumitbusiness933@gmail.com" class="btn-email">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Send an Email
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <a href="#hero" class="footer-logo">Sum<span>.</span>Motions</a>
+  <div class="footer-right">
+    <a href="https://instagram.com/un1que.sum" target="_blank" rel="noopener" class="footer-ig">@un1que.sum</a>
+    <span class="footer-copy">© 2025 Sum Motions. All rights reserved.</span>
+  </div>
+</footer>
+
+<div class="video-overlay" id="videoOverlay">
+
+  <div class="video-modal">
+
+    <button class="close-video" id="closeVideo">
+      ✕
+    </button>
+
+    <video id="popupVideo" controls playsinline></video>
+
+  </div>
+
+</div>
+
+<script>
+// TESTIMONIALS DATA
+const testimonials = [
+  { q: "Sum Motions completely transformed how my content performs. The cuts are tight, the energy is right, and my reels started actually getting traction.", name: "mahalaxmi paithani", role: "Brand founder · Instagram" },
+  { q: "I've worked with three editors before and none came close to this. Fast, communicative, and the final output is always better than what I imagined.", name: "Madhurja", role: "Mythological creator" },
+  { q: "The color grading alone is worth every penny. My videos finally look premium. Brands I was working with finds out the difference immediately.", name: "Social pro shivalika", role: "Creator" },
+  { q: "Turnaround time is insane and the quality never drops. This is the editor you keep on retainer.", name: "Meet Shah", role: "Life style creator" },
+  { q: "From raw footage to a fire reel in 24 hours. Sum Motions understands the platform. No notes needed.", name: "yathavan", role: "Content strategiest" },
+];
+
+function initCarousel() {
+  const track = document.getElementById('track');
+  const doubled = [...testimonials, ...testimonials];
+  doubled.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'testi-card';
+    const initial = t.name.split(' ').map(w => w[0]).join('').slice(0,2);
+    card.innerHTML = `
+      <p class="testi-quote">${t.q}</p>
+      <div class="testi-footer">
+        <div class="testi-avatar">${initial}</div>
+        <div>
+          <div class="testi-name">${t.name}</div>
+          <div class="testi-role">${t.role}</div>
+        </div>
+      </div>`;
+    track.appendChild(card);
+  });
+}
+initCarousel();
+
+// SCROLL FADE-IN
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('visible');
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+// NAV active state
+window.addEventListener('scroll', () => {
+  const nav = document.querySelector('nav');
+  nav.style.boxShadow = window.scrollY > 40 ? '0 2px 24px rgba(0,0,0,0.07)' : 'none';
+});
+
+const cards = document.querySelectorAll('.work-card');
+const overlay = document.getElementById('videoOverlay');
+const video = document.getElementById('popupVideo');
+const closeBtn = document.getElementById('closeVideo');
+
+cards.forEach(card => {
+
+  card.addEventListener('click', () => {
+
+    const videoSrc = card.dataset.video;
+
+    video.src = videoSrc;
+
+    overlay.classList.add('active');
+
+    video.play();
+
+  });
+
+});
+
+function closeVideo(){
+
+  overlay.classList.remove('active');
+
+  video.pause();
+
+  video.currentTime = 0;
+
+}
+
+closeBtn.addEventListener('click', closeVideo);
+
+overlay.addEventListener('click', (e)=>{
+
+  if(e.target === overlay){
+    closeVideo();
+  }
+
+});
+
+
+document.querySelectorAll('.work-preview').forEach(video => {
+  
+  video.addEventListener('loadedmetadata', () => {
+    
+    const randomTime = Math.random() * (video.duration * 0.7);
+    
+    video.currentTime = randomTime;
+    
+  });
+  
+});
+
+</script>
+</body>
+</html>
